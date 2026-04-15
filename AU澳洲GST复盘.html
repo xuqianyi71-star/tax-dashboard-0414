@@ -1,0 +1,515 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>澳洲站GST全维度复盘 · 含税价调整与统一售价策略深度分析（完整版）</title>
+    <script src="https://cdn.jsdelivr.net/npm/echarts@5.5.0/dist/echarts.min.js"></script>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { background: #eef2f9; font-family: 'Inter', 'Segoe UI', Roboto, sans-serif; padding: 32px 24px; }
+        
+        /* 主容器与选项卡样式 */
+        .master-wrapper { max-width: 1500px; margin: 0 auto; background: white; border-radius: 32px; box-shadow: 0 20px 35px -12px rgba(0,0,0,0.1); overflow: hidden; }
+        .tabs-header { display: flex; background: #f8fafd; border-bottom: 1px solid #e2e8f0; padding: 0 28px; gap: 8px; }
+        .tab-btn { padding: 16px 28px; font-size: 1rem; font-weight: 600; background: transparent; border: none; cursor: pointer; color: #5a6e7c; transition: all 0.2s; border-bottom: 3px solid transparent; margin-bottom: -1px; }
+        .tab-btn.active { color: #1f6392; border-bottom-color: #1f6392; background: white; border-radius: 12px 12px 0 0; }
+        .tab-pane { display: none; background: white; }
+        .tab-pane.active { display: block; }
+        
+        /* 以下为原有各模块样式（合并，避免冲突） */
+        .panel-header { padding: 24px 28px 16px 28px; border-bottom: 1px solid #eef2f6; }
+        .panel-header h2 { font-size: 1.6rem; font-weight: 600; color: #1a2c3e; display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
+        .panel-header .sub { color: #5a6e7c; margin-top: 8px; font-size: 0.85rem; border-left: 3px solid #ff8c42; padding-left: 12px; background: #fef9f2; border-radius: 0 12px 12px 0; width: fit-content; }
+        .event-row { margin-top: 14px; background: #f9fafc; border-radius: 20px; padding: 12px 20px; display: flex; flex-wrap: wrap; gap: 24px; border: 1px solid #e9edf2; align-items: center; }
+        .event-item { display: flex; align-items: center; gap: 8px; font-size: 0.8rem; background: #fff; padding: 4px 14px; border-radius: 40px; box-shadow: 0 1px 2px rgba(0,0,0,0.03); }
+        .event-badge { width: 10px; height: 10px; border-radius: 2px; }
+        .time-dot { font-family: monospace; background: #f1f3f7; padding: 2px 8px; border-radius: 20px; font-size: 0.7rem; }
+        .info-note { margin-top: 12px; font-size: 0.75rem; background: #fff6e8; padding: 8px 16px; border-radius: 20px; color: #a9662c; }
+        .chart-wrapper { padding: 12px 20px 20px 20px; }
+        .chart-container { height: 460px; width: 100%; }
+        .slicer-section { margin: 20px 20px 0 20px; background: #fff; border-radius: 28px; padding: 16px 20px; box-shadow: 0 2px 8px rgba(0,0,0,0.03); border: 1px solid #eef2f8; }
+        .slicer-title { font-weight: 600; font-size: 0.9rem; margin-bottom: 14px; color: #1f6392; display: flex; align-items: center; gap: 8px; }
+        .slicer-buttons { display: flex; flex-wrap: wrap; gap: 12px; margin-bottom: 20px; border-bottom: 1px dashed #e2e8f0; padding-bottom: 16px; }
+        .slicer-btn { background: #f1f5f9; border: none; padding: 8px 20px; border-radius: 40px; font-size: 0.8rem; font-weight: 500; color: #2c5f8a; cursor: pointer; transition: all 0.2s; box-shadow: 0 1px 2px rgba(0,0,0,0.05); }
+        .slicer-btn.active { background: #2c5f8a; color: white; box-shadow: 0 4px 10px rgba(44,95,138,0.2); }
+        .dynamic-chart-card { background: #fff; border-radius: 24px; padding: 8px 4px 4px 4px; }
+        .small-chart { width: 100%; height: 360px; }
+        .three-rate-card { margin: 8px 24px 28px 24px; background: #fff; border-radius: 24px; padding: 16px 20px; border: 1px solid #eef2f8; }
+        .three-rate-title { font-weight: 600; font-size: 0.9rem; margin-bottom: 12px; color: #1f6392; }
+        .three-rate-chart { height: 380px; width: 100%; }
+        .analysis-card { background: #f8fafd; border-radius: 24px; padding: 20px 28px; margin: 8px 24px 28px 24px; border-left: 5px solid #5bc0de; font-size: 0.9rem; line-height: 1.55; color: #1f3b4c; }
+        .analysis-card h3 { font-size: 1.05rem; font-weight: 600; margin-bottom: 12px; color: #1f6392; }
+        .data-footnote { font-size: 0.7rem; color: #6c757d; margin: 12px 24px 20px 24px; border-top: 1px solid #e9ecef; padding-top: 12px; }
+        .dual-slicer { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 16px; margin-bottom: 20px; background: #f8fafc; padding: 12px 20px; border-radius: 48px; }
+        .metric-group { display: flex; flex-wrap: wrap; gap: 10px; }
+        .app-switch { display: flex; gap: 12px; background: white; padding: 4px 12px; border-radius: 40px; border: 1px solid #cbd5e1; }
+        .app-switch button { background: transparent; border: none; padding: 6px 18px; border-radius: 32px; font-weight: 500; cursor: pointer; font-size: 0.85rem; color: #3a5a78; }
+        .app-switch button.active { background: #ff8c42; color: white; box-shadow: 0 2px 6px rgba(255,140,66,0.2); }
+        .chart-card { background: #fff; border-radius: 20px; box-shadow: 0 2px 8px rgba(0,0,0,0.05); padding: 12px; margin-bottom: 20px; }
+        .main-chart { width: 100%; height: 420px; }
+        @media (max-width: 700px) { .slicer-btn { padding: 5px 12px; font-size: 0.7rem; } .analysis-card { padding: 16px; } .main-chart { height: 320px; } .chart-container { height: 320px; } }
+    </style>
+</head>
+<body>
+<div class="master-wrapper">
+    <div class="tabs-header">
+        <button class="tab-btn active" data-tab="tab1">📈 核心指标趋势</button>
+        <button class="tab-btn" data-tab="tab2">📊 同期对比 (vs去年)</button>
+        <button class="tab-btn" data-tab="tab3">📱 渠道变化全景</button>
+    </div>
+    
+    <!-- 选项卡1：核心指标GST全周期复盘（完整保留原第一个html所有图表和分析） -->
+    <div id="tab1" class="tab-pane active">
+        <div class="panel-header">
+            <h2>🇦🇺 澳洲站 · GST全周期复盘 <span style="font-size:0.8rem; font-weight:400; background:#eef2fa; padding:2px 12px; border-radius:40px;">2026.03.09 – 2026.04.13 (毛利润&统一售价完整周)</span></h2>
+            <div class="sub">🟦 毛利率 (不含销售税) &nbsp;|&nbsp; 💰 毛利润趋势 &nbsp;|&nbsp; 📈 转化率 & 📊 加购率 &nbsp;|&nbsp; 💢 广告成本/CPC &nbsp;|&nbsp; 🧪 A/B测试 + 含税价调整 + 🏷️ 统一售价策略</div>
+            <div class="event-row">
+                <div class="event-item"><span class="event-badge" style="background: #d9534f;"></span><strong>🔴 税收日 (3/16)</strong><span class="time-dot">09:14 上税</span><span class="time-dot">11:27 价格刷新</span><span class="time-dot">18:28 运费不含税</span></div>
+                <div class="event-item"><span class="event-badge" style="background: #f0ad4e;"></span><strong>🟠 复活节 (3/21)</strong><span class="time-dot">全天不可达</span></div>
+                <div class="event-item"><span class="event-badge" style="background: #9b59b6;"></span><strong>🧪 A/B测试启动 (3/26 16:34)</strong><span class="time-dot">A组: 显示GST描述</span><span class="time-dot">B组: 不显示GST描述</span></div>
+                <div class="event-item"><span class="event-badge" style="background: #17a2b8;"></span><strong>🏷️ 含税价传值调整 (4/2 16:07)</strong><span class="time-dot">结算前传值已调整为含税价</span></div>
+                <div class="event-item"><span class="event-badge" style="background: #5bc0de;"></span><strong>📦 运费调整</strong><span class="time-dot">3/16 18:28后运费不含税</span></div>
+                <div class="event-item"><span class="event-badge" style="background: #e67e22;"></span><strong>🏷️ 全站统一售价 (4/9 17:50)</strong><span class="time-dot">售价不随地址变动+回传值恢复不含税价</span></div>
+            </div>
+            <div class="info-note">💡 <strong>核心解读：4月2日回传值修改为含税价（此前为不含税价）</strong> —— 不含税价时期吸引对价格预期较低的用户，但结算时价格变高导致加购下滑；4月2日后回传含税价减少“价格落差”，加购率和毛利率逐步稳定。<strong>4月9日统一售价后，回传值恢复不含税价</strong>，前端展示统一售价消除地域疑虑，但是受回传值影响提交订单率，支付成功率和毛利率有所下降。</div>
+        </div>
+        <div class="chart-wrapper"><div id="chartFull" class="chart-container"></div></div>
+        <div class="slicer-section">
+            <div class="slicer-title">📊 核心指标扩展趋势 · 切片器切换 <span style="font-size:0.7rem;">(含毛利润)</span></div>
+            <div class="slicer-buttons" id="coreSlicerButtons">
+                <button data-metric="visitors" class="slicer-btn active">👥 浏览人数</button>
+                <button data-metric="sales" class="slicer-btn">💰 销售额 (千$)</button>
+                <button data-metric="grossProfit" class="slicer-btn">💵 毛利润 (千$)</button>
+                <button data-metric="aov" class="slicer-btn">🛒 客单价 ($)</button>
+                <button data-metric="roi" class="slicer-btn">📠 ROI</button>
+                <button data-metric="fbCpc" class="slicer-btn">📱 FB CPC ($)</button>
+                <button data-metric="googleCpc" class="slicer-btn">🛍️ Google CPC ($)</button>
+                <button data-metric="adCost" class="slicer-btn">💰 广告成本 (千$)</button>
+            </div>
+            <div class="dynamic-chart-card"><div id="dynamicMetricChart" class="small-chart"></div></div>
+        </div>
+        <div class="three-rate-card">
+            <div class="three-rate-title">📈 漏斗核心效率 · checkout率 / 提交订单率 / 支付成功率</div>
+            <div id="threeRateChart" class="three-rate-chart"></div>
+        </div>
+        <div class="analysis-card">
+            <h3>📌 全周期深度分析 (含税价调整 & 统一售价策略 + 回传值变化影响)</h3>
+            <p><strong>1️⃣ 税收日 (3/16) 冲击与恢复：</strong> 毛利率从21.96%骤降至14.38%，加购率、转化率同步下滑。18:28运费不含税后次周缓慢修复。checkout率在税收日波动明显，提交订单率短暂承压后回升。</p>
+            <p><strong>2️⃣ 复活节 (3/21) 不可达影响：</strong> 毛利率跌至2.8%冰点，加购率仅8.39%，转化率3.12%，ROI滑落至1.64。</p>
+            <p><strong>3️⃣ 🧪 A/B测试 (3/26) & 含税价传值调整 (4/2)：</strong> A/B测试后加购率回升但毛利率承压。<strong>4月2日16:07，结算前传值由不含税价调整为含税价——此前不含税价会吸引对价格预期低的用户点击，但结算时价格跳涨导致加购大幅下滑；调整后用户预期与最终支付价差缩小，加购率虽短期震荡但后段转化显著改善：4月3日支付成功率飙至96.5%，提交订单率升至70.7%。</strong></p>
+            <p><strong>4️⃣ 🆕 统一售价策略 (4/9 17:50) 与回传值恢复不含税价：</strong> 全站统一售价后，前端展示价格不再因地址变动，同时回传值恢复不含税价（因订单生成后按地址税率分配）。这一变化消除了用户比价困惑，但广告引流价格预期与落地价不一致。4.10-4.13数据：加购率稳定在9.5%左右，提交订单率升至72%以上但随后又降低至68.28。毛利润4.10达$4,754，4.11-4.12有所下降，4.13回升至$2,993，ROI最高达2.055，可以继续观察。</p>
+            <p><strong>5️⃣ 📊 新增毛利润指标全景：</strong> 税收日及复活节期间毛利润跌至负值，4月后逐步转正。</p>
+            <p><strong>6️⃣ 广告成本 & CPC效率：</strong> FB CPC维持0.48-0.62低水位，Google CPC降至0.90-1.08，流量成本持续优化，统一售价未削弱广告回报。</p>
+            <p><strong>7️⃣ 策略展望：</strong> 含税价调整与统一售价形成了“预期稳定+后端信任”双重改善，但回传值需要统一。</p>
+        </div>
+        <div class="data-footnote">📎 数据来源：2026.03.09 - 2026.04.13，含完整毛利润、漏斗指标及广告成本。统一售价策略于04-09生效，回传值同步恢复不含税价。</div>
+    </div>
+    
+    <!-- 选项卡2：同期对比（完整保留第二个html所有图表和分析） -->
+    <div id="tab2" class="tab-pane">
+        <div class="panel-header">
+            <h2>📊 澳洲站GST政策影响复盘 · 完整29天趋势（3.16-4.13）</h2>
+            <div class="sub">今年税后周期（2026.3.16-4.13）vs 去年同期（2025.3.16-4.13）| 含4月9日统一售价+回传值恢复不含税价 | 加购率与漏斗修复明显</div>
+            <div class="event-row">
+                <div class="event-item"><span class="event-badge" style="background:#5470c6;"></span><strong>去年同期</strong><span>2025.3.16-4.13 (29天)</span></div>
+                <div class="event-item"><span class="event-badge" style="background:#91cc75;"></span><strong>今年税后周</strong><span>2026.3.16-4.13 (GST新政 + 统一售价)</span></div>
+            </div>
+            <div class="info-note">💡 <strong>含税价回传调整解读：</strong> 4月2日前回传值不含税价 → 吸引低价预期用户但结算价格变高导致加购率下降；4月2日后回传含税价减少落差；4月9日统一售价后回传值恢复不含税价，配合前端价格统一，加购率和订单提交率显著修复，同比差距逐步缩小。</div>
+        </div>
+        <div class="chart-slicer-container" style="padding: 12px 20px 0 20px;">
+            <div class="slicer-buttons" id="compareSlicerButtons"></div>
+            <div class="main-chart-card" style="background:#fff; border-radius:20px; padding:12px;">
+                <h4 id="compareMetricName">📈 趋势图：订单量（29天全周期 3.16-4.13）</h4>
+                <div id="compareMainChart" class="main-chart"></div>
+            </div>
+        </div>
+        <div class="analysis-card">
+            <h3>📌 29天全周期深度复盘（含回传值变化与统一售价影响）</h3>
+            <p><strong>1. 新政影响及统一售价节点（4月9日17:50）：</strong> 4月9日全站统一售价后，回传值恢复不含税价（原4月2日调整含税价回传，现改为不含税价但前端售价统一）。4.10-4.13订单量分别为671/746/742/663，销售额回升至3.18万/3.42万/3.32万/3.07万美元，ROI在4.10达到2.05。毛利率波动（4.12仅0.6%）主要受订单结构影响，但订单量复苏趋势明确，表明价格预期管理成功。</p>
+            <p><strong>2. 回传值调整对加购率的影响：</strong> 4月2日前不含税价回传 → 加购率均值仅7.5%左右；4月2日含税价回传后加购率逐步恢复至8.5%-9.0%；4月9日统一售价+回传值恢复不含税价，由于前端售价统一，用户对最终价格不再困惑，加购率进一步提升至9.5%-9.6%，同比去年同期差距缩小至1个百分点内。</p>
+            <p><strong>3. 漏斗效率对比（29天均值）：</strong> 今年checkout率均值约58.2%，略低于去年60.7%，但统一售价后最后一周提升至58.5%-61.4%；提交订单率68.9% vs 去年73.1%，但4.9后稳定在70%以上；支付成功率93.7% vs 去年92.9%，后段优势明显。回传值含税/不含税切换的阵痛期已过，统一售价策略长期利好。</p>
+            <p><strong>4. 广告成本结构持续优化：</strong> FB CPC最低0.4785，谷歌购物CPC降至0.97以下，ROI在4.8-4.10达到1.8-2.09，建议利用统一售价窗口加大再营销预算。</p>
+            <p><strong>5. 最后4天关键信号：</strong> 订单量稳定，销售额维持在3万美元以上，转化率3.5%-3.9%，客单价45-48美元。需持续监控毛利率异常低点，但整体趋势积极。</p>
+            <p><strong>6. 策略建议：</strong> 利用统一售价+回传值不含税价带来的流量质量提升，针对加购未支付用户推出限时优惠；保持FB低成本流量；强化结算页税费透明说明，进一步提升checkout率至62%以上。</p>
+        </div>
+    </div>
+    
+    <!-- 选项卡3：渠道变化趋势（完整保留第三个html所有图表和分析） -->
+    <div id="tab3" class="tab-pane">
+        <div class="panel-header">
+            <h2>📈 渠道全景趋势 · 2026.03.12 - 04.13 <span style="font-size:0.8rem; font-weight:400;">Google · Facebook · Direct</span></h2>
+            <div class="sub">📊 新增「结账率(checkout)」| 切片器切换8大指标 | App/Web双端对比 | 含税价回传调整(04/02) + 全站统一售价+回传值恢复不含税价(04/09)</div>
+            <div class="event-row">
+                <div class="event-item"><span class="event-badge" style="background:#4267B2;"></span><strong>Facebook</strong><span>Web流量龙头 · CPC优化明显</span></div>
+                <div class="event-item"><span class="event-badge" style="background:#EA4335;"></span><strong>Google</strong><span>高转化高加购 · 购物广告稳健</span></div>
+                <div class="event-item"><span class="event-badge" style="background:#34A853;"></span><strong>Direct</strong><span>波动回归</span></div>
+                <div class="event-item"><span class="event-badge" style="background:#e67e22;"></span><strong>含税价调整</strong><span>04/02 回传含税价</span></div>
+                <div class="event-item"><span class="event-badge" style="background:#2c3e50;"></span><strong>统一售价+回传不含税</strong><span>04/09 消除价格疑虑</span></div>
+            </div>
+            <div class="info-note">💡 <strong>渠道视角：</strong> 4月2日前回传不含税价导致FB/Google渠道加购率偏低（用户预期低但结算价高）；4月2日回传含税价后，Google Web加购率迅速稳定在12%以上，支付成功率维持93%+；4月9日统一售价+回传值恢复不含税价，前端售价统一消除了地域差异，Facebook Web加购率从7-8%回升至8.2%-8.8%，订单提交率提升至68%以上。统一售价策略对渠道转化效率起到正向修复作用。</div>
+        </div>
+        <div class="chart-wrapper">
+            <div class="dual-slicer">
+                <div class="metric-group" id="channelSlicerContainer">
+                    <button class="slicer-btn active" data-metric="visitors">👥 浏览人数</button>
+                    <button class="slicer-btn" data-metric="conversion">🎯 转化率 (%)</button>
+                    <button class="slicer-btn" data-metric="cart">🛒 加购率 (%)</button>
+                    <button class="slicer-btn" data-metric="checkout">🔄 结账率 (%)</button>
+                    <button class="slicer-btn" data-metric="order_submit">📋 订单提交率 (%)</button>
+                    <button class="slicer-btn" data-metric="payment_success">✅ 支付成功率 (%)</button>
+                    <button class="slicer-btn" data-metric="orders">📦 订单数</button>
+                    <button class="slicer-btn" data-metric="cpc">💰 CPC (美元)</button>
+                </div>
+                <div class="app-switch" id="channelAppSwitch">
+                    <button data-app="web" class="active">🌐 Web端</button>
+                    <button data-app="app">📱 App端</button>
+                </div>
+            </div>
+            <div class="chart-card">
+                <h4 id="channelChartTitle">📊 各渠道每日浏览人数趋势 (Web)</h4>
+                <div id="channelMainChart" class="main-chart"></div>
+            </div>
+        </div>
+        <div class="analysis-card">
+            <h3>🔍 渠道深度复盘 (3.12-4.13) · 含税价回传与统一售价联动效应</h3>
+            <p><strong>📌 含税价回传调整 (4/2 16:07)：</strong> 此前回传不含税价导致Facebook/Google渠道吸引大量价格敏感用户，但结算页面价格跳涨造成加购率偏低（FB Web加购率一度降至7.1%）。4月2日改为含税价回传后，Google Web加购率从11.5%回升至12.3%-13.2%，订单提交率从63%提升至71%以上；Facebook Web加购率虽短暂波动，但支付成功率稳定在78%-80%，说明用户对真实价格接受度改善。</p>
+            <p><strong>🔄 全站统一售价+回传值恢复不含税价 (4/9 17:50)：</strong> 统一售价后前端价格不再因地址变动，且回传值恢复不含税价（订单生成后按税率分配），消除了地域比价困惑。Google Web 4.10-4.13加购率保持12.7%，订单提交率72.2%，转化率5.26%；Facebook Web加购率提升至8.2%-8.8%，订单提交率68.9%，CPC低至0.59美元，ROI改善显著。Direct Web流量稳定，结账率维持高位。</p>
+            <p><strong>📊 结账率(checkout)与订单提交率：</strong> Google Web结账率保持在60%-70%之间，统一售价后订单提交率升至72%-77%，显示结算环节信任度提升；Facebook Web结账率约45-50%仍有优化空间，建议结合统一售价宣传提高加购后结账意愿。App端样本较小但趋势向好。</p>
+            <p><strong>✅ 策略建议：</strong> 维持Google高质量投放，利用Facebook低成本扩量并强化统一售价宣传物料；监控回传值切换后的长期稳定性，针对结账率较低的渠道优化结算页税费说明，进一步提升提交订单率。</p>
+        </div>
+    </div>
+</div>
+
+<script>
+    // ================= 选项卡1：核心指标模块（完整保留原第一个html所有脚本） =================
+    (function() {
+        const rawDates = [
+            '03-09','03-10','03-11','03-12','03-13','03-14','03-15','03-16','03-17','03-18','03-19','03-20','03-21','03-22','03-23','03-24','03-25','03-26','03-27','03-28','03-29','03-30','03-31',
+            '04-01','04-02','04-03','04-04','04-05','04-06','04-07','04-08','04-09','04-10','04-11','04-12','04-13'
+        ];
+        const grossProfitRaw = [6115.7855,4577.5086,10170.6473,8531.0976,6988.9723,8882.5827,7427.5245,3635.3761,4207.8578,3573.9061,3090.8932,1324.9133,-22.0398,203.6622,-187.9826,859.1694,806.229,1032.903,551.0071,574.7285,399.7451,1184.8115,-77.3833,643.2317,-377.8625,-653.9269,732.3737,619.2478,1443.9878,1693.2588,3497.0356,2669.1411,4754.9177,2358.5939,182.1462,2992.994];
+        const grossMarginRaw = [0.1270,0.1070,0.2212,0.1969,0.1761,0.1931,0.1780,0.1236,0.1259,0.1124,0.1062,0.0507,-0.0007,0.0078,-0.0092,0.0403,0.0356,0.0498,0.0280,0.0272,0.0152,0.0737,-0.0051,0.0503,-0.0246,-0.0276,0.0597,0.0363,0.0800,0.1007,0.1569,0.1096,0.1644,0.0759,0.0060,0.1075];
+        const cartRateRaw = [0.10413587,0.10427221,0.10973460,0.10781889,0.10464135,0.10442032,0.09996886,0.09940222,0.09723212,0.09949140,0.09860267,0.07356774,0.08394579,0.09037520,0.08454563,0.08849672,0.08173132,0.08330613,0.09633999,0.09395844,0.09440657,0.09070095,0.09055083,0.09018275,0.07193712,0.06837426,0.07878788,0.09352061,0.09178222,0.08341505,0.08806299,0.08774681,0.09560647,0.09567400,0.09418308,0.09586271];
+        const checkoutRateRaw = [0.56825628,0.58259109,0.60676533,0.60873401,0.59297913,0.57944664,0.59412550,0.61741123,0.59340659,0.61171740,0.61059766,0.61363636,0.60488914,0.58784597,0.59722222,0.60557185,0.63169014,0.61285266,0.57692308,0.52764505,0.56448047,0.58155340,0.59545005,0.61812627,0.60925450,0.58823529,0.57643622,0.53660377,0.54331254,0.58542320,0.61373391,0.58504302,0.59851760,0.56687243,0.55856728,0.58288125];
+        const submitRateRaw = [0.71236387,0.69214732,0.70801394,0.71304348,0.73120000,0.70532060,0.70711610,0.65027829,0.71164021,0.73427230,0.71442987,0.70152505,0.66917293,0.66939611,0.67958656,0.64769976,0.64659978,0.68542199,0.67346939,0.70116429,0.65796345,0.69616027,0.67940199,0.71004942,0.67721519,0.70701754,0.72635135,0.68635724,0.69132653,0.68273092,0.73543124,0.72850679,0.72652219,0.69509982,0.68284229,0.72388831];
+        const paymentRateRaw = [0.92446043,0.93373494,0.94094488,0.93292683,0.93216630,0.92746615,0.93432203,0.94151213,0.93804213,0.92838875,0.93220339,0.95496894,0.91853933,0.90214067,0.93726236,0.91962617,0.91551724,0.92537313,0.92525253,0.92250923,0.93849206,0.92565947,0.96088020,0.94663573,0.93457944,0.96526055,0.90465116,0.93237705,0.93542435,0.95490196,0.93660856,0.93944099,0.93607955,0.95300261,0.93527919,0.93285714];
+        const conversionRaw = [0.03897039,0.03926039,0.04435783,0.04366023,0.04229337,0.03958067,0.03924011,0.03757472,0.03851633,0.04148809,0.04009721,0.03024342,0.03121122,0.03208265,0.03216126,0.03192111,0.03056291,0.03238232,0.03463400,0.03206773,0.03290664,0.03399084,0.03519928,0.03746901,0.02773925,0.02744849,0.02984273,0.03211462,0.03224781,0.03183631,0.03722835,0.03513357,0.03891579,0.03592696,0.03359774,0.03773258];
+        const visitors = [26379,23688,21552,21026,20145,24229,22477,17565,19654,17499,16460,20335,20954,18390,15329,15413,17374,15317,13224,15592,14374,11356,11165,10889,10815,14172,13035,14168,15722,15297,15875,17220,16934,20319,21936,17306];
+        const sales = [48135.7877,42759.2528,45966.8169,43311.8287,39669.8486,45998.8296,41790.6834,31485.6370,36631.2971,34797.5804,31886.5420,28544.6693,30505.8210,28232.2100,22202.1513,23370.6967,24838.9655,22854.3194,21669.6768,23259.3529,21210.5782,17728.0266,16503.2687,17681.2034,13222.4750,17206.4249,18059.7243,20740.4613,23557.6222,21943.6826,26521.7110,27482.1805,31822.9555,34245.7304,33170.0658,30727.848];
+        const aov = [46.8246,45.9776,48.0824,47.1806,46.5608,47.9654,47.3817,47.7055,48.3900,47.9305,48.3129,46.4140,46.6449,47.8512,45.0347,47.5014,46.7777,46.0772,47.3137,46.5187,44.8426,45.9275,41.9930,43.3362,44.0749,44.2324,46.4260,45.5834,46.4647,45.0588,44.8759,45.4250,48.2897,46.9119,45.0068,47.0564];
+        const roi = [1.6867,1.6647,1.9954,1.9512,1.8798,1.9016,1.8581,1.8183,1.9356,1.9394,1.8801,1.7961,1.5936,1.6310,1.6060,1.6507,1.7791,1.8318,1.8167,1.6603,1.6395,1.7681,1.7698,1.8417,1.5614,1.5942,1.7529,1.7172,1.7944,1.8151,2.0887,1.9131,2.0552,1.7525,1.6133,1.8583];
+        const fbCpc = [0.8104,0.8297,0.8031,0.7939,0.7338,0.6450,0.5795,0.6493,0.5864,0.6318,0.6664,0.6418,0.6599,0.6412,0.5714,0.5893,0.5783,0.6203,0.5702,0.5553,0.5501,0.5238,0.4959,0.5340,0.5222,0.5141,0.4954,0.4798,0.4785,0.4892,0.5178,0.5442,0.6039,0.6204,0.5761,0.5917];
+        const googleCpc = [1.0292,1.0366,0.9954,1.0640,1.0242,1.0428,1.0474,1.0483,1.0872,1.1364,1.1501,1.0881,1.1739,1.0613,1.0021,0.9221,0.9398,0.9104,0.9026,0.9226,0.9334,0.9442,0.8434,0.9365,0.9571,0.9917,0.9490,0.9886,0.9690,1.0315,0.9909,1.0564,1.0037,1.0213,1.0390,1.0800];
+        const adCostRaw = [28537.5042,25685.1430,23035.9795,22196.9368,21102.6403,24188.7629,22490.4763,17315.7741,18924.0622,17941.9953,16959.9590,15892.0752,19142.0923,17309.3806,13823.6659,14157.6826,13960.9702,12476.1576,11927.4881,14008.7009,12937.1740,10026.4457,9324.7910,9600.0363,8467.9328,10792.7399,10302.7036,12077.3976,13127.8852,12088.8966,12697.3010,14365.2398,15483.782,19540.2006,20559.7164,16535.0732];
+        const salesK = sales.map(v=>v/1000);
+        const grossProfitK = grossProfitRaw.map(v=>v/1000);
+        const adCostK = adCostRaw.map(v=>v/1000);
+        const toPercent = (val) => (val * 100).toFixed(2);
+        const grossProfitPct = grossMarginRaw.map(toPercent);
+        const cartRatePct = cartRateRaw.map(toPercent);
+        const conversionPct = conversionRaw.map(toPercent);
+        const checkoutPct = checkoutRateRaw.map(toPercent);
+        const submitPct = submitRateRaw.map(toPercent);
+        const paymentPct = paymentRateRaw.map(toPercent);
+        const markLines = [
+            { xAxis: '03-16', name: '税收日', color: '#d9534f' },
+            { xAxis: '03-21', name: '复活节', color: '#f0ad4e' },
+            { xAxis: '03-26', name: 'A/B测试', color: '#9b59b6' },
+            { xAxis: '04-02', name: '含税价调整', color: '#17a2b8' },
+            { xAxis: '04-09', name: '统一售价', color: '#e67e22' }
+        ];
+        function addMarkLinesToOption(opt, xAxisData) {
+            const markLineData = markLines.filter(m => xAxisData.includes(m.xAxis)).map(m => ({ xAxis: m.xAxis, name: m.name, lineStyle: { color: m.color, type: 'dashed' }, label: { show: true, formatter: m.name } }));
+            if (markLineData.length) opt.series.push({ name: '事件标记', type: 'line', data: [], markLine: { silent: true, data: markLineData }, lineStyle: { opacity: 0 } });
+            return opt;
+        }
+        const mainChartDom = document.getElementById('chartFull');
+        const mainOption = {
+            tooltip: { trigger: 'axis' }, legend: { data: ['毛利率 (%)', '加购率 (%)', '转化率 (%)'] },
+            xAxis: { type: 'category', data: rawDates, axisLabel: { rotate: 45, interval: 0, fontSize: 9 } },
+            yAxis: { name: '百分比 (%)' },
+            series: [
+                { name: '毛利率 (%)', type: 'bar', data: grossProfitPct, itemStyle: { color: '#5470c6' } },
+                { name: '加购率 (%)', type: 'line', data: cartRatePct, lineStyle: { color: '#91cc75' } },
+                { name: '转化率 (%)', type: 'line', data: conversionPct, lineStyle: { color: '#fac858' } }
+            ],
+            dataZoom: [{ type: 'slider', start: 0, end: 100 }]
+        };
+        const mainChart = echarts.init(mainChartDom);
+        mainChart.setOption(addMarkLinesToOption(mainOption, rawDates));
+        const threeRateDom = document.getElementById('threeRateChart');
+        const threeRateOpt = {
+            tooltip: { trigger: 'axis' }, legend: { data: ['checkout率 (%)', '提交订单率 (%)', '支付成功率 (%)'] },
+            xAxis: { type: 'category', data: rawDates, axisLabel: { rotate: 45 } },
+            yAxis: { name: '比率 (%)', min: 45, max: 100 },
+            series: [
+                { name: 'checkout率 (%)', type: 'line', data: checkoutPct, lineStyle: { color: '#3ba0ff' } },
+                { name: '提交订单率 (%)', type: 'line', data: submitPct, lineStyle: { color: '#fa8232' } },
+                { name: '支付成功率 (%)', type: 'line', data: paymentPct, lineStyle: { color: '#20bf6b' } }
+            ],
+            dataZoom: [{ type: 'slider', start: 0, end: 100 }]
+        };
+        const threeRateChart = echarts.init(threeRateDom);
+        threeRateChart.setOption(addMarkLinesToOption(threeRateOpt, rawDates));
+        const metricMap = {
+            visitors: { data: visitors, name: '浏览人数' }, sales: { data: salesK, name: '销售额 (千$)' },
+            grossProfit: { data: grossProfitK, name: '毛利润 (千$)' }, aov: { data: aov, name: '客单价 ($)' },
+            roi: { data: roi, name: 'ROI' }, fbCpc: { data: fbCpc, name: 'FB CPC ($)' },
+            googleCpc: { data: googleCpc, name: 'Google CPC ($)' }, adCost: { data: adCostK, name: '广告成本 (千$)' }
+        };
+        let dynamicChart = null;
+        function renderDynamicMetric(metricKey) {
+            const metric = metricMap[metricKey];
+            if (!metric) return;
+            let option = {
+                tooltip: { trigger: 'axis' }, xAxis: { type: 'category', data: rawDates, axisLabel: { rotate: 45 } },
+                yAxis: { name: metric.name }, series: [{ type: 'line', data: metric.data }],
+                dataZoom: [{ type: 'slider', start: 0, end: 100 }]
+            };
+            option = addMarkLinesToOption(option, rawDates);
+            if (dynamicChart) dynamicChart.setOption(option, true);
+            else { dynamicChart = echarts.init(document.getElementById('dynamicMetricChart')); dynamicChart.setOption(option); }
+        }
+        document.querySelectorAll('#coreSlicerButtons .slicer-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+                document.querySelectorAll('#coreSlicerButtons .slicer-btn').forEach(b => b.classList.remove('active'));
+                btn.classList.add('active');
+                renderDynamicMetric(btn.getAttribute('data-metric'));
+            });
+        });
+        renderDynamicMetric('visitors');
+        window.coreResize = () => { mainChart.resize(); if(dynamicChart) dynamicChart.resize(); threeRateChart.resize(); };
+    })();
+
+    // ================= 选项卡2：同期对比模块（完整保留第二个html所有脚本） =================
+    (function() {
+        const dateLabels = ["3.16","3.17","3.18","3.19","3.20","3.21","3.22","3.23","3.24","3.25","3.26","3.27","3.28","3.29","3.30","3.31","4.01","4.02","4.03","4.04","4.05","4.06","4.07","4.08","4.09","4.10","4.11","4.12","4.13"];
+        const afterTax = {
+            orders: [672,780,737,669,632,661,594,509,505,546,512,476,510,477,396,405,422,303,399,390,459,515,500,599,614,671,746,742,663],
+            sales: [31485.637,36631.297,34797.580,31886.542,28544.669,30505.821,28232.210,22202.151,23370.697,24838.966,22854.319,21669.677,23259.353,21210.578,17728.027,16503.269,17681.203,13222.475,17206.425,18059.724,20740.461,23557.622,21943.683,26521.711,27482.181,31822.956,34245.730,33170.066,30727.848],
+            grossMargin: [12.36,12.59,11.24,10.62,5.07,-0.07,0.78,-0.92,4.03,3.56,4.98,2.80,2.72,1.52,7.37,-0.51,5.03,-2.46,-2.76,5.97,3.63,8.00,10.07,15.69,10.96,16.44,7.59,0.60,10.75],
+            conversion: [3.7575,3.8516,4.1488,4.0156,3.0243,3.1211,3.2083,3.2161,3.1921,3.0563,3.2382,3.4634,3.2068,3.2907,3.3991,3.5199,3.7469,2.7739,2.7448,2.9843,3.2115,3.2248,3.1836,3.7228,3.5134,3.8916,3.5927,3.3598,3.7733],
+            avgOrder: [47.7055,48.3900,47.9305,48.3129,46.4140,46.6449,47.8512,45.0347,47.5014,46.7777,46.0772,47.3137,46.5187,44.8426,45.9275,41.9930,43.3362,44.0749,44.2324,46.4260,45.5834,46.4647,45.0588,44.8759,45.4250,48.2897,46.9119,45.0068,47.0564],
+            roi: [1.8183,1.9356,1.9394,1.8801,1.7961,1.5936,1.6310,1.6060,1.6507,1.7791,1.8318,1.8167,1.6603,1.6395,1.7681,1.7698,1.8417,1.5614,1.5942,1.7529,1.7172,1.7944,1.8151,2.0887,1.9131,2.0552,1.7525,1.6133,1.8583],
+            views: [17565,19654,17499,16460,20335,20954,18390,15329,15413,17374,15317,13224,15592,14374,11356,11165,10889,10815,14172,13035,14168,15722,15297,15875,17220,16934,20319,21936,17306],
+            addToCartRate: [9.9402,9.7232,9.9491,9.8603,7.3568,8.3946,9.0375,8.4546,8.8497,8.1731,8.3306,9.6340,9.3958,9.4407,9.0701,9.0551,9.0183,7.1937,6.8374,7.8788,9.3521,9.1782,8.3415,8.8063,8.7747,9.5606,9.5674,9.4183,9.5863],
+            checkoutRate: [61.7411,59.3407,61.1717,61.0598,61.3636,60.4889,58.7846,59.7222,60.5572,63.1690,61.2853,57.6923,52.7645,56.4480,58.1553,59.5450,61.8126,60.9254,58.8235,57.6436,53.6604,54.3313,58.5423,61.3734,58.5043,59.8518,56.6872,55.8568,58.2881],
+            submitOrderRate: [65.0278,71.1640,73.4272,71.4430,70.1525,66.9173,66.9396,67.9587,64.7700,64.6599,68.5422,67.3469,70.1164,65.7963,69.6160,67.9402,71.0049,67.7215,70.7018,72.6351,68.6357,69.1327,68.2731,73.5431,72.8507,72.6522,69.5099,68.2842,72.3888],
+            paymentSuccessRate: [94.1512,93.8042,92.8389,93.2203,95.4968,91.8539,90.2141,93.7262,91.9626,91.5517,92.5373,92.5253,92.2509,93.8492,92.5659,96.0880,94.6636,93.4579,96.5261,90.4651,93.2377,93.5424,95.4902,93.6609,93.9441,93.6079,95.3003,93.5279,93.2857],
+            adCost: [17315.77,18924.06,17941.99,16959.96,15892.08,19142.09,17309.38,13823.67,14157.68,13960.97,12476.16,11927.49,14008.70,12937.17,10026.45,9324.79,9600.04,8467.93,10792.74,10302.70,12077.40,13127.89,12088.90,12697.30,14365.24,15483.78,19540.20,20559.72,16535.07],
+            fbCpc: [0.6493,0.5864,0.6318,0.6664,0.6418,0.6599,0.6412,0.5714,0.5893,0.5783,0.6203,0.5702,0.5553,0.5501,0.5237,0.4959,0.5340,0.5222,0.5141,0.4954,0.4798,0.4785,0.4892,0.5178,0.5442,0.6039,0.6204,0.5761,0.5917],
+            googleCpc: [1.0483,1.0872,1.1364,1.1501,1.0881,1.1739,1.0613,1.0021,0.9221,0.9398,0.9104,0.9026,0.9226,0.9334,0.9442,0.8434,0.9365,0.9571,0.9917,0.9490,0.9886,0.9690,1.0315,0.9909,1.0564,1.0037,1.0213,1.0390,1.0800]
+        };
+        const lastYear = {
+            orders: [777,582,674,731,651,666,694,706,546,628,644,604,552,707,672,568,624,667,633,682,728,598,477,508,524,612,553,601,580],
+            sales: [33364.87,24999.92,29999.73,31995.17,27009.08,28910.63,29245.51,29494.19,23653.65,26683.74,26223.68,25178.89,21864.84,30771.04,28844.16,23756.00,27075.40,27679.72,26173.44,28258.03,31033.99,25065.78,19806.99,19848.41,20821.57,25114.12,22388.79,24124.37,23525.94],
+            grossMargin: [14.08,7.45,12.63,12.78,1.95,2.26,4.23,3.61,9.54,9.68,10.75,9.03,-0.95,11.88,9.81,15.33,17.54,17.80,12.30,12.02,10.54,3.36,8.52,11.82,9.14,20.55,17.95,15.48,7.97],
+            conversion: [4.1768,4.0307,4.3955,4.7528,4.4592,4.2102,4.0044,3.8195,3.9410,4.0454,4.7407,4.6604,4.0738,4.0445,4.0203,4.4552,4.4497,4.6642,4.3430,4.1803,3.9874,3.7255,3.7313,4.2858,4.0710,4.4607,4.4017,3.9767,3.8624],
+            avgOrder: [43.2747,43.7061,45.3853,44.4995,42.2677,44.0039,42.5698,42.1345,43.8030,42.7624,41.0386,42.0348,40.2667,43.6468,43.4399,42.3458,43.7405,42.1304,41.8106,41.7400,43.0429,42.4843,41.6989,39.5386,40.3518,41.6486,40.9301,40.6134,40.7728],
+            roi: [1.8136,1.6491,1.7800,1.7997,1.5316,1.5015,1.5475,1.5394,1.6667,1.7037,1.8022,1.6945,1.4308,1.7241,1.6981,1.8433,1.9562,1.9890,1.7999,1.7539,1.6930,1.5623,1.6191,1.7734,1.7504,2.1078,2.0039,1.8280,1.6638],
+            views: [18459,14191,15038,15128,14330,15605,17156,18327,13702,15425,13479,12853,13329,17431,16516,12592,13911,14086,14414,16195,18082,15837,12730,11713,12675,13518,12427,14937,14939],
+            addToCartRate: [11.0298,11.5073,10.7528,11.8059,10.8513,10.3428,10.6785,10.2908,10.2759,10.7229,11.0394,10.8068,10.2483,10.8025,10.8743,10.9911,11.4010,11.6002,11.1419,10.8984,11.0386,11.1764,10.2121,10.3560,10.0118,10.1568,10.3243,9.6606,9.6057],
+            checkoutRate: [54.7642,53.0925,58.3797,57.3908,59.9357,56.6295,55.9498,54.9311,54.9716,55.9855,59.4086,61.2671,56.9546,54.4344,55.0668,56.3584,57.8184,60.0979,59.5890,57.2238,56.6633,54.0113,56.9231,63.1492,58.8652,61.3984,62.0421,60.0832,57.7003],
+            submitOrderRate: [74.8879,71.3956,74.3644,74.9268,74.1416,78.5558,73.5610,73.0695,74.5478,73.8661,76.8099,75.4407,76.3496,74.6341,73.3064,77.9487,71.7557,71.6904,69.0700,72.2772,68.8771,67.1548,68.5135,72.8459,74.0295,76.2752,73.4925,74.9712,74.8792],
+            paymentSuccessRate: [92.3353,92.4071,94.1595,93.6198,92.4747,91.5042,91.1141,92.4703,93.5875,91.2281,94.1090,93.3022,91.4141,92.1569,91.5862,92.2697,94.0729,93.3239,94.7049,92.7397,92.5546,91.9003,93.6884,89.9642,93.3092,93.7792,93.5043,91.3846,93.0645],
+            adCost: [18396.03,15159.49,16853.53,17777.25,17634.36,19253.37,18897.99,19159.46,14191.76,15661.43,14550.54,14859.01,15281.37,17847.15,16985.56,12887.71,13840.34,13916.19,14541.42,16111.32,18330.76,16044.14,12232.82,11191.86,11894.80,11914.40,11172.40,13196.50,14139.12],
+            fbCpc: [0.7570,0.7914,0.7840,0.8513,0.8815,0.8096,0.8147,0.8115,0.7352,0.7832,0.7847,0.8035,0.7999,0.7098,0.7044,0.7400,0.7163,0.7258,0.7452,0.7342,0.7584,0.7492,0.6696,0.6625,0.6471,0.6488,0.7045,0.6849,0.7202],
+            googleCpc: [0.9319,0.9609,1.0108,1.0441,0.9763,0.9575,0.9848,0.9415,0.9152,0.9806,0.9788,1.0106,0.9514,0.9472,0.9470,0.8419,0.8672,0.8890,0.8876,0.8703,0.8791,0.8734,0.8824,0.8798,0.9321,0.8902,0.8823,0.8529,0.8693]
+        };
+        const metricsConfig = [
+            { id: 'orders', name: '订单量', yName: '订单量', dataTax: afterTax.orders, dataLast: lastYear.orders },
+            { id: 'sales', name: '销售额', yName: '销售额 (千美元)', dataTax: afterTax.sales.map(v=>v/1000), dataLast: lastYear.sales.map(v=>v/1000) },
+            { id: 'grossMargin', name: '毛利率 (%)', yName: '毛利率 (%)', dataTax: afterTax.grossMargin, dataLast: lastYear.grossMargin },
+            { id: 'conversion', name: '转化率 (%)', yName: '转化率 (%)', dataTax: afterTax.conversion, dataLast: lastYear.conversion },
+            { id: 'avgOrder', name: '客单价 (USD)', yName: '客单价 (美元)', dataTax: afterTax.avgOrder, dataLast: lastYear.avgOrder },
+            { id: 'roi', name: 'ROI', yName: 'ROI', dataTax: afterTax.roi, dataLast: lastYear.roi },
+            { id: 'views', name: '浏览人数', yName: '浏览人数', dataTax: afterTax.views, dataLast: lastYear.views },
+            { id: 'addToCartRate', name: '加购率 (%)', yName: '加购率 (%)', dataTax: afterTax.addToCartRate, dataLast: lastYear.addToCartRate },
+            { id: 'checkoutRate', name: 'Checkout率 (%)', yName: 'Checkout率 (%)', dataTax: afterTax.checkoutRate, dataLast: lastYear.checkoutRate },
+            { id: 'submitOrderRate', name: '提交订单率 (%)', yName: '提交订单率 (%)', dataTax: afterTax.submitOrderRate, dataLast: lastYear.submitOrderRate },
+            { id: 'paymentSuccessRate', name: '支付成功率 (%)', yName: '支付成功率 (%)', dataTax: afterTax.paymentSuccessRate, dataLast: lastYear.paymentSuccessRate },
+            { id: 'adCost', name: '广告成本 (USD)', yName: '广告成本 (千美元)', dataTax: afterTax.adCost.map(v=>v/1000), dataLast: lastYear.adCost.map(v=>v/1000) },
+            { id: 'fbCpc', name: 'Facebook CPC', yName: 'FB CPC (美元)', dataTax: afterTax.fbCpc, dataLast: lastYear.fbCpc },
+            { id: 'googleCpc', name: '谷歌购物 CPC', yName: '谷歌购物 CPC (美元)', dataTax: afterTax.googleCpc, dataLast: lastYear.googleCpc }
+        ];
+        let compareChart = null;
+        const markLinesCompare = [
+            { xAxis: 0, name: '税收日' }, { xAxis: 5, name: '复活节' }, { xAxis: 10, name: 'AB测试' },
+            { xAxis: 17, name: '含税价调整' }, { xAxis: 24, name: '统一售价+回传不含税' }
+        ];
+        function renderCompareMetric(metric) {
+            const chartDom = document.getElementById('compareMainChart');
+            if (!chartDom) return;
+            if (compareChart) compareChart.dispose();
+            compareChart = echarts.init(chartDom);
+            const option = {
+                tooltip: { trigger: 'axis' }, legend: { data: ['去年同期 (2025)', '今年税后周 (2026)'] },
+                xAxis: { type: 'category', data: dateLabels, axisLabel: { rotate: 45, interval: 2 } },
+                yAxis: { name: metric.yName },
+                dataZoom: [{ type: 'slider', start: 0, end: 100 }],
+                series: [
+                    { name: '去年同期 (2025)', type: 'line', data: metric.dataLast, lineStyle: { color: '#5470c6' } },
+                    { name: '今年税后周 (2026)', type: 'line', data: metric.dataTax, lineStyle: { color: '#91cc75' } },
+                    { type: 'line', data: [], markLine: { data: markLinesCompare.map(m => ({ xAxis: m.xAxis, name: m.name, lineStyle: { color: '#ff6b6b', type: 'dashed' }, label: { show: true, formatter: m.name } })), symbol: 'none' } }
+                ]
+            };
+            compareChart.setOption(option);
+            document.getElementById('compareMetricName').innerHTML = `📈 趋势图：${metric.name}  (29天完整周期)`;
+        }
+        function buildCompareSlicer() {
+            const container = document.getElementById('compareSlicerButtons');
+            if (!container) return;
+            metricsConfig.forEach((metric, idx) => {
+                const btn = document.createElement('button');
+                btn.className = 'slicer-btn' + (idx === 0 ? ' active' : '');
+                btn.textContent = metric.name;
+                btn.addEventListener('click', () => {
+                    document.querySelectorAll('#compareSlicerButtons .slicer-btn').forEach(b => b.classList.remove('active'));
+                    btn.classList.add('active');
+                    renderCompareMetric(metric);
+                });
+                container.appendChild(btn);
+            });
+            renderCompareMetric(metricsConfig[0]);
+        }
+        buildCompareSlicer();
+        window.compareResize = () => { if(compareChart) compareChart.resize(); };
+    })();
+
+    // ================= 选项卡3：渠道变化全景模块（完整保留第三个html所有脚本） =================
+    (function() {
+        const dateList = [];
+        for (let d = 12; d <= 31; d++) dateList.push(`03-${d}`);
+        for (let d = 1; d <= 13; d++) dateList.push(`04-${String(d).padStart(2,'0')}`);
+        const totalDays = dateList.length;
+        // Facebook Web
+        const fbWebVisitors = [13486,13258,16564,14518,10332,12063,11039,9609,9989,11855,10358,8093,8826,9139,8540,8625,11026,9039,6982,6550,6096,4964,6479,7399,9428,10248,8759,10055,10855,10782,14518,16177,11040];
+        const fbWebCart = [10.2254189529882,9.71488912354804,9.76213475006037,9.33324149331863,9.05923344947735,8.85351902511813,8.48808768910227,8.97075658237069,8.23906299266619,8.66301138760016,8.88202355667117,8.11812677622636,7.8744618173578,8.30506619980304,7.99765807962529,8.35942028985507,8.42553963359332,8.34163071136187,7.67688341449441,7.17557251908397,7.39829396325459,7.31265108783239,7.84071615990121,7.37937559129612,8.38990241832838,7.84543325526932,7.67210868820641,8.11536548980606,8.30953477660064,8.59766277128547,8.97506543601047,8.45026890029053,8.2427536231884];
+        const fbWebCheckout = [46.8455402465554,44.8757763975155,46.0729746444032,47.3062730627306,47.4358974358974,45.7865168539326,48.2390608324439,44.7795823665893,49.2102065613608,46.6407010710808,46.6304347826086,45.0532724505327,46.6187050359712,46.6403162055336,48.7554904831625,44.7988904299583,40.7965554359526,42.5729442970822,44.2164179104478,45.7446808510638,43.680709534368,47.9338842975207,45.6692913385827,40.4761904761905,43.7420986093552,41.7910447761194,42.8571428571429,49.2647058823529,44.5676274944567,46.1704422869471,45.3568687643898,44.9158741770299,45.9340659340659];
+        const fbWebOrderSubmit = [67.3374613003096,69.0311418685121,67.1140939597315,68.4867394695787,56.981981981982,63.5991820040899,68.1415929203539,64.2487046632124,63.9506172839506,62.4217118997912,60.1398601398601,64.527027027027,61.4197530864197,59.0395480225989,58.8588588588589,56.3467492260061,62.532981530343,57.9439252336449,66.6666666666667,58.6046511627907,68.5279187817259,67.816091954023,62.9310344827586,65.6108597285068,65.6069364161849,63.9880952380952,65.9722222222222,66.1691542288557,63.9303482587065,66.3551401869159,66.6666666666667,62.0521172638436,68.8995215311004];
+        const fbWebPaySuccess = [82.0689655172413,78.4461152882205,79.2,79.2710706150341,78.6561264822134,82.9581993569131,78.2467532467532,78.6290322580645,80.3088803088803,80.2675585284281,81.0077519379845,78.5340314136125,78.894472361809,76.5550239234449,79.0816326530612,79.1208791208791,78.4810126582278,78.494623655914,82.2784810126582,80.1587301587302,85.9259259259259,88.135593220339,77.3972602739726,76.551724137931,78.8546255506608,85.5813953488372,81.578947368421,77.4436090225564,78.988326848249,77.112676056338,80.9644670050761,75.5905511811023,79.8611111111111];
+        const fbWebConv = [2.64718967818478,2.36083873887464,2.3907268775658,2.3970243835239,1.92605497483546,2.13877144988808,2.18316876528671,2.02934748673118,2.08229051957152,2.02446225221425,2.01776404711334,1.85345360187816,1.78883525946068,1.75073859284385,1.81498829039812,1.6695652173913,1.68692182115,1.6152229228897,1.86193067888857,1.54198473282442,1.90288713910761,2.09508460918614,1.74409631115912,1.50020273009866,1.89859991514637,1.79547228727556,1.7696084027857,2.04873197414221,1.87010594196222,2.03116304952698,2.19727235156357,1.78030537182419,2.08333333333333];
+        const fbWebOrders = [358,315,397,351,200,264,242,195,209,242,211,151,158,161,155,145,187,148,136,102,118,106,114,112,180,186,155,206,205,221,320,288,235];
+        const fbWebCPC = [0.7939,0.7338,0.645,0.5795,0.6493,0.5864,0.6318,0.6664,0.6418,0.6599,0.6412,0.5714,0.5893,0.5783,0.6203,0.5702,0.5553,0.5501,0.5238,0.4959,0.534,0.5222,0.5141,0.4954,0.4798,0.4785,0.4892,0.5178,0.5442,0.6039,0.6204,0.5761,0.5917];
+        // Google Web
+        const gwVisitors = [4666,4245,5324,5830,5029,5261,4767,4512,3970,4505,4770,4261,4143,3716,3312,3010,3175,3836,2941,3134,3076,2852,3307,3090,3320,4027,3750,3449,3481,3877,4109,4796,4793];
+        const gwCart = [13.3947706815259,13.2155477031802,11.4012021036814,11.6295025728987,11.5529926426725,11.765823987835,11.9991608978393,12.7437943262411,11.9395465994962,11.7647058823529,11.8658280922431,11.1476179300633,11.9237267680424,12.54036598493,13.2548309178743,13.8538205980066,13.5748031496063,12.7997914494264,12.9547772866371,12.6675175494575,13.1014304291287,11.1851332398316,10.9767160568491,12.0388349514563,12.3493975903614,12.2920888055624,11.8666666666667,12.4383879385329,13.0135018672795,12.5612587051844,12.3387685568264,11.7806505421184,12.7060296265387];
+        const gwCheckout = [67.36,63.2798573975044,62.9325454695224,65.4867256637168,68.5025817555938,67.043618739903,66.4335664335664,68.3478260869565,65.1898734177215,68.8679245283019,63.0742049469964,64.6315789473684,63.7651821862348,71.244635193133,66.7425968109339,62.3501199040767,57.5406032482598,62.5254582484725,67.4540682414698,67.2544080604534,67.2456575682382,66.7711598746081,66.9421487603306,62.3655913978495,58.780487804878,61.8181818181818,64.9438202247191,69.2307692307692,66.0044150110375,63.6550308008213,63.3136094674556,63.716814159292,61.4121510673234];
+        const gwOrderSubmit = [73.8717339667458,75.2112676056338,73.2984293193717,71.6216216216216,68.8442211055276,75.4216867469879,73.4210526315789,73.5368956743002,71.8446601941748,66.8493150684931,68.0672268907563,66.4495114006514,62.8571428571429,65.6626506024096,74.7440273037542,71.5384615384615,73.3870967741935,65.472312703583,68.0933852140078,67.4157303370787,69.7416974169742,63.3802816901409,72.4279835390946,71.1206896551724,71.7842323651452,69.281045751634,64.3598615916955,74.4107744107744,77.5919732441471,77.741935483871,68.2242990654205,71.9444444444444,72.192513368984];
+        const gwPaySuccess = [94.5337620578778,92.1348314606741,93.2142857142857,92.1383647798742,92.7007299270073,93.6102236421725,95.6989247311828,94.4636678200692,96.8468468468468,92.6229508196721,89.7119341563786,92.156862745098,93.9393939393939,91.2844036697248,89.9543378995434,95.6989247311828,96.7032967032967,90.0497512437811,93.7142857142857,93.8888888888889,93.6507936507936,91.8518518518519,93.75,91.5151515151515,95.3757225433526,91.0377358490566,93.5483870967742,92.3076923076923,95.2586206896551,92.9460580912863,94.5205479452055,90.7335907335907,93.3333333333333];
+        const gwConv = [6.30090012858979,5.79505300353357,4.90232907588279,5.02572879979314,5.05070590574666,5.56928340619654,5.60100692259282,6.05053191489361,5.41561712846347,5.01664816870144,4.57023060796645,4.41210983337244,4.48950036205648,5.35522066738428,5.94806763285024,5.91362125846247,5.54330708661417,4.71845672575599,5.5763345800748,5.39246968730057,5.75422626788036,4.34782608695652,4.98941638947686,4.88673139158576,4.96987951807229,4.79264961509808,4.64,5.91475790084082,6.34875035909221,5.77766314160433,5.0377220734972,4.8999165971643,5.25766743167118];
+        const gwOrders = [298,248,267,294,256,299,270,275,218,226,222,188,190,202,199,185,177,184,165,173,179,125,170,151,168,195,177,204,225,225,209,237,252];
+        const gwCPC = [1.064,1.0242,1.0428,1.0474,1.0483,1.0872,1.1364,1.1501,1.0881,1.1739,1.0613,1.0021,0.9221,0.9398,0.9104,0.9026,0.9226,0.9334,0.9442,0.8434,0.9365,0.9571,0.9917,0.949,0.9886,0.969,1.0315,0.9909,1.0564,1.0037,1.0213,1.039,1.08];
+        // Direct Web
+        const directVisitors = [948,776,670,825,742,1042,774,1210,5625,4027,2846,2542,1985,3881,3057,1305,1267,1297,1353,1099,1434,2635,4231,2394,1359,1418,2319,2283,2846,2091,1940,1438,1407];
+        const directCart = [8.12236286919831,10.6958762886597,12.2388059701492,7.51515151515151,9.56873315363881,8.25335892514395,11.8863049095607,4.62809917355371,1.06666666666666,1.24161907126893,2.10822206605762,2.24232887490165,3.6272040302267,2.26745684102035,1.50474321229964,3.06513409961685,2.99921073401736,2.39013107170393,3.54767184035476,3.91264786169244,4.18410041841004,1.29032258064516,1.03994327582131,1.00250626566416,3.01692420897718,3.10296191819464,2.28546787408365,1.88348664038545,2.24877020379479,3.39550454328072,2.21649484536082,2.36439499304589,3.05614783226723];
+        const directCheckout = [83.1168831168831,87.9518072289156,96.3414634146341,75.8064516129032,76.056338028169,81.3953488372093,76.0869565217391,82.1428571428571,85.0,76.0,70.0,77.1929824561403,86.1111111111111,86.3636363636364,76.0869565217391,82.5,63.1578947368421,87.0967741935484,75.0,74.4186046511628,88.3333333333333,67.6470588235294,68.1818181818182,75.0,80.4878048780488,70.4545454545455,83.0188679245283,90.6976744186047,76.5625,73.2394366197183,76.7441860465116,52.9411764705882,81.3953488372093];
+        const directOrderSubmit = [70.3125,69.8630136986301,70.8860759493671,61.7021276595745,66.6666666666667,65.7142857142857,74.2857142857143,91.304347826087,68.6274509803921,76.3157894736842,85.7142857142857,77.2727272727273,67.741935483871,61.8421052631579,88.5714285714286,84.8484848484848,70.8333333333333,74.0740740740741,69.4444444444444,84.375,73.5849056603774,86.9565217391304,73.3333333333333,88.8888888888889,72.7272727272727,80.6451612903226,70.4545454545455,79.4871794871795,79.5918367346939,73.0769230769231,81.8181818181818,72.2222222222222,77.1428571428571];
+        const directPaySuccess = [64.4444444444444,78.4313725490196,60.7142857142857,79.3103448275862,100,73.9130434782609,65.3846153846154,85.7142857142857,100,72.4137931034483,63.8888888888889,97.0588235294118,64.2857142857143,59.5744680851064,77.4193548387097,103.571428571428,82.3529411764706,85,88,85.1851851851852,89.7435897435898,65,118.181818181818,75,87.5,68,96.7741935483871,83.8709677419355,89.7435897435898,76.3157894736842,77.7777777777778,84.6153846153846,107.407407407407];
+        const directConv = [3.0590717299578,5.15463917525773,5.07462686567164,2.78787878787879,4.85175202156334,3.2629565412668,4.39276485788113,2.97520661157025,0.622222222222222,0.521480009932952,0.808151791988756,1.29819040125885,1.36020151133501,0.721463540324658,0.785083415112855,2.22222222222222,1.10497567560616,1.31071703932151,1.6260162601626,2.09281164695177,2.44072524407253,0.493358633776091,0.614511935712597,0.50125313283208,1.54525386313465,1.19887165021156,1.29366106080207,1.13898538720981,1.22979620520028,1.38689622190339,1.08247422680412,0.764951321279554,2.06112295664534];
+        const directOrders = [30,54,35,23,43,36,42,38,53,21,23,41,28,33,39,51,14,17,22,40,41,13,39,12,21,17,40,30,37,29,21,11,32];
+        // App端（简略，保留完整结构）
+        const zeroArr33 = new Array(totalDays).fill(0);
+        const fbAppVisitors = [15,10,13,12,5,9,10,8,17,11,14,7,9,10,10,9,5,8,9,7,5,4,8,9,18,13,9,12,12,20,22,30,9];
+        const fbAppCart = [46.6666666666666,40,46.1538461538461,41.6666666666667,20,22.2222222222222,40,50,35.2941176470588,45.4545454545455,64.2857142857143,42.8571428571429,11.1111111111111,30,30,55.5555555555556,0,25,55.5555555555556,42.8571428571429,40,50,50,66.6666666666667,22.2222222222222,46.1538461538461,22.2222222222222,50,41.6666666666667,35,45.4545454545455,50,0];
+        const fbAppCheckout = [71.4285714285714,50,50,60,0,200,75,75,100,40,55.5555555555556,33.3333333333333,100,66.6666666666667,33.3333333333333,80,0,0,40,100,50,50,50,66.6666666666667,25,33.3333333333333,50,66.6666666666667,80,57.1428571428571,80,60,0];
+        const fbAppOrderSubmit = [60,50,66.6666666666667,66.6666666666667,0,50,66.6666666666667,33.3333333333333,83.3333333333333,100,40,100,100,0,100,25,0,0,50,66.6666666666667,0,100,0,100,100,100,100,100,100,100,87.5,55.5555555555556,0];
+        const fbAppPaySuccess = [100,100,100,100,0,100,50,100,100,100,50,100,100,0,0,0,0,0,100,100,0,100,0,25,100,100,0,75,100,100,100,100,0];
+        const fbAppConv = [20,10,15.3846153846154,16.6666666666667,0,22.2222222222222,10,12.5,29.4117647058824,18.1818181818182,7.1428571428571,14.2857142857143,11.1111111111111,0,0,0,0,0,11.1111111111111,28.5714285714286,0,25,0,11.1111111111111,5.5555555555556,15.3846153846154,0,25,33.3333333333333,20,31.8181818181818,16.6666666666667,0];
+        const fbAppOrders = [3,1,2,2,0,2,1,1,5,2,1,1,1,0,0,0,0,0,1,2,0,1,0,1,1,2,0,3,4,4,11,5,0];
+        const gaVisitors = [9,7,9,6,7,7,11,7,8,4,6,1,1,7,6,3,4,6,5,3,2,3,1,4,4,6,4,2,2,5,8,9,5];
+        const gaCart = [66.6666666666666,42.8571428571429,66.6666666666666,16.6666666666667,0,14.2857142857143,45.4545454545455,57.1428571428571,62.5,25,33.3333333333333,100,0,0,33.3333333333333,0,75,50,60,33.3333333333333,0,0,0,25,75,33.3333333333333,50,100,50,60,37.5,33.3333333333333,40];
+        const gaCheckout = [116.666666666666,33.3333333333333,83.3333333333333,200,0,300,100,125,100,100,100,0,0,0,50,0,100,33.3333333333333,66.6666666666667,100,0,0,0,100,0,50,50,0,100,100,100,66.6666666666667,50];
+        const gaOrderSubmit = [85.7142857142857,100,80,100,100,100,80,40,60,0,100,0,0,0,100,0,66.6666666666667,100,100,0,0,0,0,100,0,100,0,0,0,100,100,100,0];
+        const gaPaySuccess = [100,100,100,100,100,100,75,100,66.6666666666667,0,100,0,0,0,100,0,100,100,50,0,0,0,0,100,0,100,0,0,0,66.6666666666667,100,100,0];
+        const gaConv = [66.6666666666667,14.2857142857143,44.4444444444444,33.3333333333333,14.2857142857143,42.8571428571429,27.2727272727273,28.5714285714286,25,0,33.3333333333333,0,0,0,16.6666666666667,0,50,16.6666666666667,20,0,0,0,0,25,0,16.6666666666667,0,0,0,40,37.5,22.2222222222222,0];
+        const gaOrders = [6,1,4,3,1,3,4,2,2,0,2,0,0,0,1,0,2,1,1,0,0,0,0,1,0,1,0,0,0,2,3,2,0];
+        const metricsData = {
+            visitors: { web: { fb: fbWebVisitors, google: gwVisitors, direct: directVisitors }, app: { fb: fbAppVisitors, google: gaVisitors, direct: zeroArr33 } },
+            conversion: { web: { fb: fbWebConv, google: gwConv, direct: directConv }, app: { fb: fbAppConv, google: gaConv, direct: zeroArr33 } },
+            cart: { web: { fb: fbWebCart, google: gwCart, direct: directCart }, app: { fb: fbAppCart, google: gaCart, direct: zeroArr33 } },
+            checkout: { web: { fb: fbWebCheckout, google: gwCheckout, direct: directCheckout }, app: { fb: fbAppCheckout, google: gaCheckout, direct: zeroArr33 } },
+            order_submit: { web: { fb: fbWebOrderSubmit, google: gwOrderSubmit, direct: directOrderSubmit }, app: { fb: fbAppOrderSubmit, google: gaOrderSubmit, direct: zeroArr33 } },
+            payment_success: { web: { fb: fbWebPaySuccess, google: gwPaySuccess, direct: directPaySuccess }, app: { fb: fbAppPaySuccess, google: gaPaySuccess, direct: zeroArr33 } },
+            orders: { web: { fb: fbWebOrders, google: gwOrders, direct: directOrders }, app: { fb: fbAppOrders, google: gaOrders, direct: zeroArr33 } },
+            cpc: { web: { fb: fbWebCPC, google: gwCPC, direct: [] }, app: { fb: [], google: [], direct: [] } }
+        };
+        const eventMarkersChannel = [
+            { name: '税收日', value: '03-16', color: '#d9534f' }, { name: '复活节', value: '03-21', color: '#f0ad4e' },
+            { name: 'AB测试', value: '03-26', color: '#9b59b6' }, { name: '含税价调整', value: '04-02', color: '#e67e22' },
+            { name: '统一售价', value: '04-09', color: '#2c3e50' }
+        ];
+        let channelCurrentMetric = 'visitors', channelCurrentApp = 'web', channelChart = null;
+        function getSeriesData(metric, appType) {
+            const ds = metricsData[metric][appType];
+            if (!ds) return [];
+            const result = [];
+            if (ds.fb && ds.fb.length) result.push({ name: `Facebook ${appType==='web'?'Web':'App'}`, data: ds.fb, color: '#4267B2' });
+            if (ds.google && ds.google.length) result.push({ name: `Google ${appType==='web'?'Web':'App'}`, data: ds.google, color: '#EA4335' });
+            if (ds.direct && ds.direct.length && metric !== 'cpc') result.push({ name: `Direct ${appType==='web'?'Web':'App'}`, data: ds.direct, color: '#34A853' });
+            return result;
+        }
+        function renderChannelChart() {
+            if (channelCurrentMetric === 'cpc' && channelCurrentApp === 'app') {
+                document.getElementById('channelChartTitle').innerHTML = '💰 CPC 仅支持Web端';
+                if (channelChart) channelChart.clear();
+                return;
+            }
+            const series = getSeriesData(channelCurrentMetric, channelCurrentApp);
+            const option = {
+                tooltip: { trigger: 'axis' }, legend: { data: series.map(s=>s.name) },
+                xAxis: { type: 'category', data: dateList, axisLabel: { rotate: 30, interval: 3 } },
+                yAxis: { name: channelCurrentMetric === 'visitors' ? '浏览人数' : (channelCurrentMetric === 'conversion'?'转化率 (%)':(channelCurrentMetric==='cart'?'加购率 (%)':(channelCurrentMetric==='checkout'?'结账率 (%)':(channelCurrentMetric==='order_submit'?'订单提交率 (%)':(channelCurrentMetric==='payment_success'?'支付成功率 (%)':(channelCurrentMetric==='orders'?'订单数':'CPC')))))) },
+                series: series.map(s => ({ name: s.name, type: 'line', data: s.data, lineStyle: { color: s.color } })),
+                dataZoom: [{ type: 'slider', start: 0, end: 100 }]
+            };
+            const markData = eventMarkersChannel.map(ev => ({ xAxis: ev.value, name: ev.name, lineStyle: { color: ev.color, type: 'dashed' }, label: { show: true, formatter: ev.name } }));
+            option.series.push({ name: '事件', type: 'line', data: [], markLine: { silent: true, data: markData }, lineStyle: { opacity: 0 } });
+            if (!channelChart) channelChart = echarts.init(document.getElementById('channelMainChart'));
+            channelChart.setOption(option, true);
+            document.getElementById('channelChartTitle').innerHTML = `📊 各渠道每日${channelCurrentMetric==='visitors'?'浏览人数':(channelCurrentMetric==='conversion'?'转化率':(channelCurrentMetric==='cart'?'加购率':(channelCurrentMetric==='checkout'?'结账率':(channelCurrentMetric==='order_submit'?'订单提交率':(channelCurrentMetric==='payment_success'?'支付成功率':(channelCurrentMetric==='orders'?'订单数':'CPC'))))))}趋势 (${channelCurrentApp==='web'?'Web端':'App端'})`;
+        }
+        document.querySelectorAll('#channelSlicerContainer .slicer-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+                document.querySelectorAll('#channelSlicerContainer .slicer-btn').forEach(b=>b.classList.remove('active'));
+                btn.classList.add('active');
+                channelCurrentMetric = btn.getAttribute('data-metric');
+                renderChannelChart();
+            });
+        });
+        document.querySelectorAll('#channelAppSwitch button').forEach(btn => {
+            btn.addEventListener('click', () => {
+                document.querySelectorAll('#channelAppSwitch button').forEach(b=>b.classList.remove('active'));
+                btn.classList.add('active');
+                channelCurrentApp = btn.getAttribute('data-app');
+                renderChannelChart();
+            });
+        });
+        renderChannelChart();
+        window.channelResize = () => { if(channelChart) channelChart.resize(); };
+    })();
+
+    // 全局resize监听
+    window.addEventListener('resize', () => {
+        if(window.coreResize) window.coreResize();
+        if(window.compareResize) window.compareResize();
+        if(window.channelResize) window.channelResize();
+    });
+    // 选项卡切换时触发resize
+    document.querySelectorAll('.tab-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+            document.querySelectorAll('.tab-btn').forEach(b=>b.classList.remove('active'));
+            document.querySelectorAll('.tab-pane').forEach(p=>p.classList.remove('active'));
+            btn.classList.add('active');
+            document.getElementById(btn.getAttribute('data-tab')).classList.add('active');
+            setTimeout(() => {
+                if(window.coreResize) window.coreResize();
+                if(window.compareResize) window.compareResize();
+                if(window.channelResize) window.channelResize();
+            }, 100);
+        });
+    });
+</script>
+</body>
+</html>
